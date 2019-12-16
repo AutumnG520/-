@@ -1,0 +1,125 @@
+封装的一些方法：
+
+
+// 时间戳转时间格式
+TimeStampToTime(stamp){
+  if(!stamp){
+    return '';
+  }
+  var date = new Date(stamp*1); //获取一个时间对象
+  console.log(date);
+  let getYear = date.getFullYear(); // 获取完整的年份(4位,1970)
+  let getMonth = date.getMonth() + 1; // 获取月份(0-11,0代表1月,用的时候记得加上1)
+  let getDate = date.getDate(); // 获取日(1-31)
+  // date.getTime(); // 获取时间(从1970.1.1开始的毫秒数)
+  let getHours = date.getHours(); // 获取小时数(0-23)
+  let getMinutes = date.getMinutes(); // 获取分钟数(0-59)
+  let getSeconds = date.getSeconds();
+  return getYear + '-' + getMonth + '-' + getDate + ' ' + getHours + ':' + getMinutes + ':' + getSeconds;
+},
+
+
+// 日期转时间戳
+dateToTime(strtime){
+  // var date = new Date(strtime);
+  const date = new Date(strtime.replace(/-/g, '/'));
+  let time1 = date.getTime();
+  return time1;
+}
+
+
+
+randomData(itemName,min,max,n){ //min随机数的最小值//max 随机数的最大值 // 返回一个长度为N的数组 //不传默认n为10//itemName为本地localstorage
+        let dataAry = [];
+        n = n?n:10;
+        for(let i=0;i<n;i++){
+          let b = Math.floor(Math.random()*(max-min+1)+min);
+          dataAry.push(b)
+        };
+        sessionStorage.setItem(itemName,JSON.stringify(dataAry))
+        return dataAry;
+      },
+new Date().toLocaleString('chinese',{hour12:false});
+
+
+文件上传下载
+
+<template>
+  <div>
+    JSONread:
+    <input type="file" @change="getFile($event)">
+    <button @click="fileOut">导出</button>
+    <a href="/api/function/inspection/export">asdasd</a>
+  </div>
+</template>
+
+<script>
+    // import $ from "jquery"
+    import FileSaver from 'file-saver'
+    import axios from "axios"
+    export default {
+        name: "jsonRead",
+      data(){
+          return {
+            filePath:'',
+          }
+      },
+      methods:{
+        getFileReader(file) {
+          let reader = new FileReader();
+          reader.onload = (evt) => {
+            console.log(evt.target.result);
+            this.importFile(evt.target.result)
+          };
+          reader.readAsText(file);
+        },
+        getFile(event){
+          this.filePath = event.target.files[0];
+          this.getFileReader(event.target.files[0])
+        },
+    //
+        importFile(fileText){
+          let sendObj = {
+            inspectionValue:fileText
+          };
+          axios.post("/api/function/inspection/import",sendObj)
+            .then(res =>{
+              console.log(res)
+            })
+        },
+        fileOut(){
+          // 通过流形式的下载文件
+          // axios.get("/api/function/inspection/export")
+          //   .then(res => {
+          //     console.log(res)
+          //     const link = document.createElement("a");
+          //     console.log(res.data)
+          //     let blob = new Blob([res.data], { type: "application/octet-stream" });
+          //     // let blob = new Blob([res.data], { type: "multipary/form-data" });
+          //     link.style.display = "none";
+          //     link.href = URL.createObjectURL(blob);
+          //
+          //     link.setAttribute("download", decodeURI(res.headers['filename']));
+          //     document.body.appendChild(link);
+          //     link.click();
+          //     document.body.removeChild(link);
+          //   })
+          //   .catch(error => {
+          //     this.$Notice.error({
+          //       title: "错误",
+          //       desc: "系统数据错误"
+          //     });
+          //     console.log(error);
+          //   });
+
+          // 获取数据实现下载
+          axios.get("/api/function/inspection/export")
+            .then(res =>{
+              const data = JSON.stringify(res.data.data);
+              const blob = new Blob([data], {type: 'json'});
+              FileSaver.saveAs(blob, res.data.fileName)
+            })
+        }
+    }
+    }
+ 
